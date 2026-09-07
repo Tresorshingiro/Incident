@@ -172,8 +172,11 @@ first — the one and only call in the codebase made with `forStorage: true`.
 - **development** — middleware in `vite.config.ts`
 - **production** — `api/arcgis-token.ts`, a Vercel serverless function
 
-Both call the same `requestPortalToken()` in `src/server/tokenMiddleware.ts`, so
-the client never knows which one answered.
+Both call the same `requestPortalToken()` in `api/_token.ts`, so the client
+never knows which one answered. That shared file lives under `api/` on purpose:
+importing it from `src/` made the deployed function crash with
+`FUNCTION_INVOCATION_FAILED` because the cross-directory import did not bundle.
+The leading underscore keeps Vercel from routing it as an endpoint.
 
 **You must set the environment variables in the Vercel dashboard.** `.env` is
 gitignored and is never uploaded, so a deployment without them returns
@@ -200,6 +203,7 @@ Open the network tab and look at `/api/arcgis-token`:
 | Response | Cause |
 |---|---|
 | `404` | The function is not deployed. Confirm `api/arcgis-token.ts` and `vercel.json` are committed. |
+| `FUNCTION_INVOCATION_FAILED` | The function crashed before it could answer — a build or import problem, not a credentials one. Check the Vercel function logs; nothing inside `api/` should import from outside `api/`. |
 | `500` with `ESRI_USERNAME ... must be set` | Environment variables missing, or set but not redeployed. |
 | `500` with `Invalid username or password` | Wrong credentials, or the portal account is locked. |
 | `200` with a token, but geocoding still fails | The portal rejected the referer. Check the deployment origin is reachable and that the account has access to `Reverse_Geocoding_Version9`. |

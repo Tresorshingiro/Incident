@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import { requestPortalToken } from './src/server/tokenMiddleware';
+import { requestPortalToken } from './api/_token';
 
 /**
  * Serves GET /api/arcgis-token. Credentials stay in this process — they are

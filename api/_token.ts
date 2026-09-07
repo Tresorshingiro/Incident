@@ -1,7 +1,13 @@
 /**
- * Server-side only. This module reads the portal credentials and must never be
- * imported from client code — it is used by vite.config.ts and by whatever
- * serverless function replaces it in production.
+ * Portal token minting. Server-side only — this reads the credentials.
+ *
+ * Lives under `api/` so the Vercel function imports it with a purely local
+ * relative path; a cross-directory import into `src/` failed to bundle and the
+ * function crashed with FUNCTION_INVOCATION_FAILED. The leading underscore
+ * keeps Vercel from routing it as an endpoint.
+ *
+ * vite.config.ts imports this same file for the dev middleware, so development
+ * and production share one implementation.
  */
 export const GENERATE_TOKEN_URL = 'https://esrirw.rw/portal/sharing/rest/generateToken';
 
@@ -16,10 +22,14 @@ export type PortalCredentials = {
 /** Token lifetime requested from the portal, in minutes. */
 const EXPIRATION_MINUTES = 120;
 
+/** Well under Vercel's function timeout, so a slow portal fails cleanly. */
+const REQUEST_TIMEOUT_MS = 8000;
+
 export async function requestPortalToken(creds: PortalCredentials): Promise<PortalToken> {
   if (!creds.username || !creds.password) {
     throw new Error(
-      'ESRI_USERNAME and ESRI_PASSWORD must be set in .env (without a VITE_ prefix)',
+      'ESRI_USERNAME and ESRI_PASSWORD must be set (without a VITE_ prefix). ' +
+        'On Vercel, set them in Project Settings and redeploy.',
     );
   }
 
@@ -32,11 +42,17 @@ export async function requestPortalToken(creds: PortalCredentials): Promise<Port
     f: 'json',
   });
 
-  const response = await fetch(GENERATE_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
-  });
+  let response: Response;
+  try {
+    response = await fetch(GENERATE_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    throw new Error(`Could not reach the portal: ${(error as Error).message}`);
+  }
 
   if (!response.ok) throw new Error(`generateToken failed with HTTP ${response.status}`);
 

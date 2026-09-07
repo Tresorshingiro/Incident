@@ -1,8 +1,6 @@
-import { requestPortalToken } from '../src/server/tokenMiddleware';
+import { requestPortalToken } from './_token';
 
-type Req = {
-  headers: Record<string, string | string[] | undefined>;
-};
+type Req = { headers: Record<string, string | string[] | undefined> };
 type Res = {
   statusCode: number;
   setHeader(name: string, value: string): void;
@@ -17,20 +15,27 @@ type Res = {
  * served by the Vite middleware in vite.config.ts.
  */
 export default async function handler(req: Req, res: Res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-store');
-
   try {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store');
+
     const token = await requestPortalToken({
       username: process.env.ESRI_USERNAME ?? '',
       password: process.env.ESRI_PASSWORD ?? '',
       referer: refererFor(req),
     });
+
     res.statusCode = 200;
     res.end(JSON.stringify(token));
   } catch (error) {
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: (error as Error).message }));
+    // Nothing may escape: an uncaught throw here surfaces as Vercel's opaque
+    // FUNCTION_INVOCATION_FAILED instead of a message anyone can act on.
+    try {
+      res.statusCode = 500;
+      res.end(JSON.stringify({ error: (error as Error)?.message ?? 'Unknown error' }));
+    } catch {
+      // The response was already sent or torn down; there is nothing left to do.
+    }
   }
 }
 
@@ -42,13 +47,14 @@ export default async function handler(req: Req, res: Res) {
  */
 function refererFor(req: Req): string {
   const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const headers = req?.headers ?? {};
 
-  const origin = first(req.headers.origin);
+  const origin = first(headers.origin);
   if (origin) return origin;
 
-  const host = first(req.headers['x-forwarded-host']) ?? first(req.headers.host);
+  const host = first(headers['x-forwarded-host']) ?? first(headers.host);
   if (host) {
-    const proto = first(req.headers['x-forwarded-proto']) ?? 'https';
+    const proto = first(headers['x-forwarded-proto']) ?? 'https';
     return `${proto}://${host}`;
   }
 
