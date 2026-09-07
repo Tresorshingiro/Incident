@@ -80,8 +80,7 @@ export const POI_MAX_RESULTS = 5;
 export const SUGGEST_DEBOUNCE_MS = 300;
 
 export const INCIDENT_CATEGORIES = [
-  'Road traffic', 'Fire', 'Flood', 'Landslide', 'Medical',
-  'Utility', 'Crime', 'Infrastructure', 'Other',
+  'Road traffic', 'Crime', 'Other',
 ] as const;
 
 export const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;

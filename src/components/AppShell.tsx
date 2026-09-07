@@ -32,7 +32,7 @@ export default function AppShell({
           <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-fill-accent">
             <PinIcon />
           </span>
-          <span className="truncate text-[12.5px] font-medium text-ink">Incident registry</span>
+          <span className="truncate text-[12.5px] font-medium text-ink">Incident Call Center</span>
           <span className="mono hidden text-[10.5px] text-ink-muted sm:inline">RWA · EPSG:4326</span>
         </div>
 

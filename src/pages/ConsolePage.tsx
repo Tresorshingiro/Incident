@@ -99,6 +99,20 @@ export default function ConsolePage() {
     return parts.length ? parts.join(' · ') : null;
   }, [form.fields.sector.value, form.fields.cell.value]);
 
+  const locationSearch = (
+    <SearchBox
+      disabled={token !== 'ready'}
+      disabledReason={
+        token === 'failed' ? 'Locator unavailable — pin on the map' : 'Connecting to locator…'
+      }
+      placeholder="Search a place or address"
+      inputId="panel-location-search"
+      variant="inline"
+      onPreview={setHighlight}
+      onChoose={(p, how) => void resolve(p, how)}
+    />
+  );
+
   const panel = (
     <IncidentForm
       details={form.details}
@@ -114,6 +128,7 @@ export default function ConsolePage() {
       onRetry={retry}
       onSubmit={onSubmit}
       onReset={() => { form.reset(); setSubmitted(null); setActiveId(null); }}
+      search={locationSearch}
     />
   );
 

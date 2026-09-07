@@ -2,7 +2,7 @@ import {
   COUNTRY_CODE, GEOCODE_URL, RWANDA_EXTENT, SUGGEST_DEBOUNCE_MS,
 } from '../config/layers';
 import type { AdminLevel, AdminNames, GeoResult, Pt, Suggestion } from '../types';
-import { createDebounced, type Outcome } from './debounced';
+import { createDebounced, type Debounced } from './debounced';
 
 /** Build a WGS84 point. The only place x/y become a Pt. */
 export function wgs84(x: number, y: number): Pt {
@@ -258,22 +258,19 @@ export async function suggest(text: string, opts: SuggestOpts = {}): Promise<Sug
   }));
 }
 
-const debouncedSuggest = createDebounced<[string, SuggestOpts], Suggestion[]>(
-  (signal, text, opts) => suggest(text, { ...opts, signal }),
-  SUGGEST_DEBOUNCE_MS,
-);
-
 /**
- * Debounced typeahead for the search box. Resolves to `{ superseded: true }`
- * when a newer keystroke replaced this call — drop that result silently.
+ * A debounced typeahead, one per search box.
+ *
+ * Deliberately a factory rather than a module singleton: the app renders two
+ * search boxes (over the map and in the panel), and a shared debouncer would
+ * let a keystroke in one cancel the other's in-flight request.
+ *
+ * `call()` resolves to `{ superseded: true }` when a newer keystroke replaced
+ * it — drop that result silently, it is not an error.
  */
-export function suggestDebounced(
-  text: string,
-  opts: SuggestOpts = {},
-): Promise<Outcome<Suggestion[]>> {
-  return debouncedSuggest.call(text, opts);
-}
-
-export function cancelSuggest(): void {
-  debouncedSuggest.cancel();
+export function createSuggestDebounced(): Debounced<[string, SuggestOpts], Suggestion[]> {
+  return createDebounced<[string, SuggestOpts], Suggestion[]>(
+    (signal, text, opts) => suggest(text, { ...opts, signal }),
+    SUGGEST_DEBOUNCE_MS,
+  );
 }

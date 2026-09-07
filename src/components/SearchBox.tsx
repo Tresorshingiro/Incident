@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { cancelSuggest, findAddressCandidates, suggestDebounced } from '../services/geocode';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createSuggestDebounced, findAddressCandidates } from '../services/geocode';
 import type { GeoResult, Pt, Suggestion } from '../types';
 import { Spinner } from './IncidentMap';
 
 type Props = {
   disabled: boolean;
   disabledReason?: string;
+  placeholder?: string;
+  /** Ties an external <label> to the input. */
+  inputId?: string;
+  /**
+   * `overlay` floats over the map and needs a scrim to stay legible on
+   * satellite; `inline` sits in the panel and matches the other fields.
+   */
+  variant?: 'overlay' | 'inline';
   onPreview: (point: Pt | null) => void;
   onChoose: (point: Pt, how: 'search' | 'suggest') => void;
 };
@@ -22,8 +30,14 @@ type Mode =
  * A suggestion marked `isCollection` can resolve to many candidates, so
  * selecting one may open a second-level picker instead of committing a point.
  */
-export default function SearchBox({ disabled, disabledReason, onPreview, onChoose }: Props) {
+export default function SearchBox({
+  disabled, disabledReason, placeholder, inputId, variant = 'overlay',
+  onPreview, onChoose,
+}: Props) {
   const listId = useId();
+  // One debouncer per box, so the map's search and the panel's do not cancel
+  // each other's in-flight requests.
+  const debouncedSuggest = useMemo(createSuggestDebounced, []);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [text, setText] = useState('');
   const [mode, setMode] = useState<Mode>({ kind: 'suggestions', items: [] });
@@ -37,14 +51,14 @@ export default function SearchBox({ disabled, disabledReason, onPreview, onChoos
   const runSuggest = useCallback(async (value: string) => {
     setError(null);
     if (!value.trim()) {
-      cancelSuggest();
+      debouncedSuggest.cancel();
       setMode({ kind: 'suggestions', items: [] });
       setOpen(false);
       return;
     }
     setBusy(true);
     try {
-      const outcome = await suggestDebounced(value);
+      const outcome = await debouncedSuggest.call(value, {});
       if (outcome.superseded) return;
       setMode({ kind: 'suggestions', items: outcome.value });
       setActive(outcome.value.length ? 0 : -1);
@@ -55,9 +69,9 @@ export default function SearchBox({ disabled, disabledReason, onPreview, onChoos
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [debouncedSuggest]);
 
-  useEffect(() => () => cancelSuggest(), []);
+  useEffect(() => () => debouncedSuggest.cancel(), [debouncedSuggest]);
 
   const commit = useCallback(
     (result: GeoResult, how: 'search' | 'suggest') => {
@@ -175,7 +189,8 @@ export default function SearchBox({ disabled, disabledReason, onPreview, onChoos
     <div className="relative">
       <div
         className={[
-          'map-chrome flex h-9 items-center gap-2.5 px-3 transition',
+          'flex h-9 items-center gap-2.5 px-3 transition',
+          variant === 'overlay' ? 'map-chrome' : 'bg-fill-field hair',
           showList ? 'rounded-t-lg' : 'rounded-lg',
           disabled ? 'opacity-70' : '',
         ].join(' ')}
@@ -183,13 +198,18 @@ export default function SearchBox({ disabled, disabledReason, onPreview, onChoos
         <SearchIcon />
         <input
           ref={inputRef}
+          id={inputId}
           role="combobox"
           aria-expanded={showList}
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={active >= 0 ? `${listId}-opt-${active}` : undefined}
           className="min-w-0 flex-1 bg-transparent text-[13px] text-ink placeholder:text-[12.5px] placeholder:text-ink-muted focus:outline-none"
-          placeholder={disabled ? (disabledReason ?? 'Search unavailable') : 'Search a place or address in Rwanda'}
+          placeholder={
+            disabled
+              ? (disabledReason ?? 'Search unavailable')
+              : (placeholder ?? 'Search a place or address in Rwanda')
+          }
           value={text}
           disabled={disabled}
           onChange={(e) => {
@@ -214,7 +234,10 @@ export default function SearchBox({ disabled, disabledReason, onPreview, onChoos
         <div
           id={listId}
           role="listbox"
-          className="map-chrome scroll-slim absolute z-20 max-h-80 w-full overflow-y-auto rounded-b-lg border-t-0 pb-1"
+          className={[
+            'scroll-slim absolute z-30 max-h-80 w-full overflow-y-auto rounded-b-lg border-t-0 pb-1',
+            variant === 'overlay' ? 'map-chrome' : 'bg-surface-1 hair',
+          ].join(' ')}
         >
           {error && (
             <div className="px-3 py-2 text-[11.5px] text-ink-danger hair-t">

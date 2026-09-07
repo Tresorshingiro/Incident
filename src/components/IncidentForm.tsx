@@ -19,6 +19,8 @@ type Props = {
   onRetry: () => void;
   onSubmit: () => void;
   onReset: () => void;
+  /** The location search box, rendered above "What happened". */
+  search?: React.ReactNode;
 };
 
 /** Only the active segment carries colour; inactive segments stay plain. */
@@ -36,7 +38,7 @@ const SEVERITY_LABEL: Record<Severity, string> = {
 export default function IncidentForm(props: Props) {
   const {
     details, setDetail, fields, result, resolving, hasPoint, submitting, submitted,
-    onEdit, onRevert, onRetry, onSubmit, onReset,
+    onEdit, onRevert, onRetry, onSubmit, onReset, search,
   } = props;
 
   const [reporterOpen, setReporterOpen] = useState(false);
@@ -69,6 +71,15 @@ export default function IncidentForm(props: Props) {
         </span>
       </header>
 
+      {/* Outside the scroll container on purpose: the suggestions dropdown is
+          absolutely positioned and would be clipped by overflow-y-auto. */}
+      {search && (
+        <section className="relative z-20 shrink-0 space-y-1.5 px-3.5 py-3 hair-b">
+          <label className="label" htmlFor="panel-location-search">Find a location</label>
+          {search}
+        </section>
+      )}
+
       <div className="scroll-slim min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         {/* ---- What happened ---- */}
         <section className="space-y-2.5 px-3.5 py-3">
@@ -98,7 +109,7 @@ export default function IncidentForm(props: Props) {
           </div>
 
           <div className="min-w-0">
-            <label className="label" htmlFor="category">Category</label>
+            <label className="label" htmlFor="category">Incident Category</label>
             <select
               id="category"
               value={details.category}
