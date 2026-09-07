@@ -1,0 +1,199 @@
+/* Light is the base; dark redefines the same tokens.
+   No file outside this one contains a raw colour. */
+:root {
+  color-scheme: light;
+
+  --surface-1: #ffffff;
+  --surface-2: #f5f6f8;
+  --surface-3: #eceef1;
+
+  --border: #dfe2e7;
+  --border-strong: #c6cbd3;
+  --border-accent: #96b0ef;
+  --border-warning: #e3c483;
+  --border-danger: #eba9b8;
+
+  --text-primary: #12161d;
+  --text-secondary: #59616f;
+  --text-muted: #8b93a1;
+  --text-accent: #23539f;
+  --text-warning: #855505;
+  --text-danger: #ad133a;
+  --text-success: #0a6446;
+  --text-on-accent: #ffffff;
+
+  --fill-accent: #2a5fd8;
+  --fill-accent-hover: #1f4dbb;
+  --fill-field: #ffffff;
+  --fill-selected: #edf2fd;
+  --fill-hover: #f0f2f5;
+
+  --bg-accent: #e9effc;
+  --bg-warning: #fbf1dc;
+  --bg-danger: #fceaee;
+  --bg-success: #e3f4ec;
+
+  --sev-low: #8b93a1;
+  --sev-medium: #23539f;
+  --sev-high: #a8620a;
+  --sev-critical: #ad133a;
+
+  --ring: rgba(42, 95, 216, 0.16);
+  /* Behind map controls so they stay legible on satellite imagery. */
+  --scrim: rgba(255, 255, 255, 0.86);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-1: #12161d;
+  --surface-2: #0b0e13;
+  --surface-3: #1b2029;
+
+  --border: #262c36;
+  --border-strong: #39414e;
+  --border-accent: #3c5f9f;
+  --border-warning: #6b5320;
+  --border-danger: #74304a;
+
+  --text-primary: #e8ecf3;
+  --text-secondary: #9ba5b5;
+  --text-muted: #6b7484;
+  --text-accent: #8ab0ff;
+  --text-warning: #e2b96a;
+  --text-danger: #f791a6;
+  --text-success: #5fd0a0;
+  --text-on-accent: #ffffff;
+
+  --fill-accent: #3f6fe0;
+  --fill-accent-hover: #4d7cf0;
+  --fill-field: #0e1218;
+  --fill-selected: #182236;
+  --fill-hover: #1a1f28;
+
+  --bg-accent: #16223a;
+  --bg-warning: #2f2611;
+  --bg-danger: #33141e;
+  --bg-success: #0d2a21;
+
+  --sev-low: #6b7484;
+  --sev-medium: #8ab0ff;
+  --sev-high: #e2b96a;
+  --sev-critical: #f791a6;
+
+  --ring: rgba(96, 141, 255, 0.26);
+  --scrim: rgba(11, 14, 19, 0.86);
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: 'cv05' 1, 'ss01' 1, 'tnum' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--bg-accent); }
+
+*:focus-visible { outline: 2px solid var(--fill-accent); outline-offset: 1px; border-radius: 6px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: none; }
+
+/* ---- hairlines -------------------------------------------------------- */
+/* 0.5px so the rules read as structure, not as chrome. */
+.hair { border: 0.5px solid var(--border); }
+.hair-t { border-top: 0.5px solid var(--border); }
+.hair-b { border-bottom: 0.5px solid var(--border); }
+.hair-l { border-left: 0.5px solid var(--border); }
+.hair-r { border-right: 0.5px solid var(--border); }
+
+/* ---- form controls ---------------------------------------------------- */
+/* One skin for every input in the app. Entered values read larger and darker
+   than placeholders, so filled and empty are distinguishable at a glance. */
+.label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+.field {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 9px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--fill-field);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+textarea.field { height: auto; padding: 7px 9px; line-height: 1.5; resize: vertical; }
+.field::placeholder { font-size: 13px; color: var(--text-muted); }
+.field:hover { border-color: var(--border-strong); }
+.field:focus { border-color: var(--fill-accent); box-shadow: 0 0 0 3px var(--ring); }
+
+/* Machine-derived values only: coordinates, scores, timings, timestamps. */
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.field.mono { font-size: 13px; }
+.field.mono::placeholder { font-size: 12.5px; }
+
+/* Borderless input used inside the compact hierarchy rows. */
+.cell-input {
+  width: 100%;
+  min-width: 0;
+  height: 27px;
+  padding: 0 7px;
+  font-size: 12.5px;
+  text-align: right;
+  color: var(--text-primary);
+  background: transparent;
+  border: 0.5px solid transparent;
+  border-radius: 6px;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.cell-input::placeholder { font-size: 12px; color: var(--text-muted); }
+.cell-input:hover { background: var(--fill-hover); }
+.cell-input:focus {
+  background: var(--fill-field);
+  border-color: var(--fill-accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* ---- map chrome ------------------------------------------------------- */
+/* Controls sit on top of imagery; the scrim keeps them legible on any basemap. */
+.map-chrome {
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 0.5px solid var(--border);
+}
+
+.esri-attribution {
+  display: none !important;
+}
+
+/* ---- scrollbars ------------------------------------------------------- */
+.scroll-slim { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.scroll-slim::-webkit-scrollbar { width: 9px; height: 0; }
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.scroll-slim::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,7 @@
+/* Must come first: a CSS @import after any other statement is invalid and gets
+   dropped, which silently removes every design token from the build. */
+@import './theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
