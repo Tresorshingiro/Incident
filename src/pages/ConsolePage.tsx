@@ -136,7 +136,7 @@ export default function ConsolePage() {
           />
 
           {/* Search: top-left, inset 16px, fixed max width. */}
-          <div className="pointer-events-none absolute left-4 top-4 z-20 w-full max-w-[400px] pr-4">
+          <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 lg:left-4 lg:right-auto lg:top-4 lg:w-full lg:max-w-[400px]">
             <div className="pointer-events-auto">
               <SearchBox
                 disabled={token !== 'ready'}
@@ -148,11 +148,19 @@ export default function ConsolePage() {
                 onPreview={setHighlight}
                 onChoose={(p, how) => void resolve(p, how)}
               />
+
+              {token === 'failed' && (
+                <div className="map-chrome mt-2 rounded-lg px-3 py-2 text-[11.5px] leading-relaxed text-ink-warning">
+                  Locator offline — search, matched address and nearby places are
+                  unavailable. Pinning on the map still resolves the administrative
+                  hierarchy, which is served anonymously.
+                </div>
+              )}
             </div>
           </div>
 
           {/* Incidents rail, bottom-left above the status bar. */}
-          <div className="pointer-events-none absolute bottom-9 left-4 z-20">
+          <div className="pointer-events-none absolute bottom-[78px] left-3 z-20 lg:bottom-9 lg:left-4">
             <IncidentsRail
               incidents={incidents}
               open={railOpen}

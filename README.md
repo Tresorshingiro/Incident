@@ -165,9 +165,48 @@ To write real features, replace the `console.info` with an `applyEdits` against
 `FUTURE_INCIDENT_LAYER_URL`. The commit path already calls `commitGeocode()`
 first — the one and only call in the codebase made with `forStorage: true`.
 
-For production, `/api/arcgis-token` needs to exist outside the Vite dev server;
-deploy `src/server/tokenMiddleware.ts` as a serverless function at the same
-path and the client contract does not change.
+## Deploying to Vercel
+
+`/api/arcgis-token` exists twice, deliberately, behind one contract:
+
+- **development** — middleware in `vite.config.ts`
+- **production** — `api/arcgis-token.ts`, a Vercel serverless function
+
+Both call the same `requestPortalToken()` in `src/server/tokenMiddleware.ts`, so
+the client never knows which one answered.
+
+**You must set the environment variables in the Vercel dashboard.** `.env` is
+gitignored and is never uploaded, so a deployment without them returns
+`{"error":"ESRI_USERNAME and ESRI_PASSWORD must be set..."}` and the app runs
+with the locator offline.
+
+Project → Settings → Environment Variables, for Production *and* Preview:
+
+| Name | Value |
+|---|---|
+| `ESRI_USERNAME` | the portal user |
+| `ESRI_PASSWORD` | that user's password |
+
+Do **not** set `APP_ORIGIN` in Vercel. The function derives the token's referer
+from the incoming request, so production and every preview URL work without
+per-domain configuration; a hardcoded value would break preview deployments.
+
+Redeploy after adding variables — Vercel does not apply them to existing builds.
+
+### If the locator shows offline in production
+
+Open the network tab and look at `/api/arcgis-token`:
+
+| Response | Cause |
+|---|---|
+| `404` | The function is not deployed. Confirm `api/arcgis-token.ts` and `vercel.json` are committed. |
+| `500` with `ESRI_USERNAME ... must be set` | Environment variables missing, or set but not redeployed. |
+| `500` with `Invalid username or password` | Wrong credentials, or the portal account is locked. |
+| `200` with a token, but geocoding still fails | The portal rejected the referer. Check the deployment origin is reachable and that the account has access to `Reverse_Geocoding_Version9`. |
+
+The administrative hierarchy keeps working in every one of these cases, because
+those boundary layers are anonymous. That split — hierarchy fills in, address
+and POI do not — is the signature of a token problem rather than a service one.
 
 ## Testing
 

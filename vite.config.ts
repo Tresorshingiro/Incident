@@ -11,14 +11,22 @@ function arcgisTokenPlugin(env: Record<string, string>): Plugin {
   return {
     name: 'arcgis-token',
     configureServer(server) {
-      server.middlewares.use('/api/arcgis-token', async (_req, res) => {
+      server.middlewares.use('/api/arcgis-token', async (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Cache-Control', 'no-store');
         try {
+          // Mirror the serverless function: derive the referer from the
+          // request so dev and production behave identically.
+          const host = req.headers.host;
+          const referer =
+            (req.headers.origin as string | undefined) ??
+            (host ? `http://${host}` : env.APP_ORIGIN) ??
+            'http://localhost:5173';
+
           const token = await requestPortalToken({
             username: env.ESRI_USERNAME ?? '',
             password: env.ESRI_PASSWORD ?? '',
-            referer: env.APP_ORIGIN || 'http://localhost:5173',
+            referer,
           });
           res.statusCode = 200;
           res.end(JSON.stringify(token));

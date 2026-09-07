@@ -320,7 +320,7 @@ export default function IncidentMap({
       {ready && !error && (
         <>
           {/* Basemap toggles — compact text, top right. */}
-          <div className="map-chrome absolute right-4 top-4 z-20 flex overflow-hidden rounded-lg">
+          <div className="map-chrome absolute right-3 top-[60px] z-20 flex overflow-hidden rounded-lg sm:right-4 sm:top-4">
             {BASEMAPS.map((b, i) => (
               <button
                 key={b.id}
@@ -343,7 +343,7 @@ export default function IncidentMap({
           </div>
 
           {/* Zoom / recentre. */}
-          <div className="map-chrome absolute right-4 top-[68px] z-20 flex flex-col overflow-hidden rounded-lg">
+          <div className="map-chrome absolute right-4 top-[68px] z-20 hidden flex-col overflow-hidden rounded-lg sm:flex">
             <MapButton label="Zoom in" onClick={() => nudgeZoom(1)}>
               <path d="M12 5v14M5 12h14" />
             </MapButton>
@@ -359,14 +359,14 @@ export default function IncidentMap({
           </div>
 
           {/* Status bar, bottom left. */}
-          <div className="map-chrome absolute bottom-0 left-0 z-20 flex h-6 items-center gap-3 rounded-tr-lg border-b-0 border-l-0 px-2.5">
+          <div className="map-chrome absolute bottom-[46px] left-0 z-20 flex h-6 items-center gap-3 rounded-tr-lg border-b-0 border-l-0 px-2.5 lg:bottom-0">
             <span className="mono text-[10.5px] text-ink-secondary">
               {readout ? `${readout.y.toFixed(4)}, ${readout.x.toFixed(4)}` : '—, —'}
             </span>
             {place && (
               <>
                 <span className="h-2.5 w-px bg-line" />
-                <span className="max-w-[240px] truncate text-[10.5px] text-ink-muted">{place}</span>
+                <span className="hidden max-w-[240px] truncate text-[10.5px] text-ink-muted sm:inline">{place}</span>
               </>
             )}
             {busy && (
